@@ -1,7 +1,7 @@
 import crypto from "crypto";
 import { put, list } from "@vercel/blob";
 
-const OPEN_TIME = new Date("2026-05-19T15:30:00+01:00");
+const OPEN_TIME = new Date("2026-05-29T15:30:00+01:00");
 
 export async function POST(request) {
   const url = new URL(request.url);

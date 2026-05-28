@@ -1,7 +1,5 @@
 import { list } from "@vercel/blob";
 
-export const config = { runtime: "edge" };
-
 export async function GET(request) {
   const url = new URL(request.url);
   const token =

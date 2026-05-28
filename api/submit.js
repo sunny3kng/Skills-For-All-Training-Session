@@ -1,6 +1,5 @@
+import crypto from "crypto";
 import { put } from "@vercel/blob";
-
-export const config = { runtime: "edge" };
 
 export async function POST(request) {
   try {

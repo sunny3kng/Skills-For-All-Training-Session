@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SFA Pre-Session Questionnaire — Skills for All</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #08080E;
+    --glass: rgba(18, 18, 28, 0.65);
+    --glass-input: rgba(0, 0, 0, 0.3);
+    --border: rgba(255, 255, 255, 0.06);
+    --border-hover: rgba(255, 255, 255, 0.12);
+    --text: #E8E8F0;
+    --text-muted: #8888A2;
+    --text-dim: #5C5C74;
+    --gold: #E8A020;
+    --gold-glow: rgba(232, 160, 32, 0.35);
+    --gold-subtle: rgba(232, 160, 32, 0.1);
+    --error: #EF4444;
+    --error-glass: rgba(239, 68, 68, 0.08);
+    --success: #10B981;
+    --success-glass: rgba(16, 185, 129, 0.08);
+    --radius: 16px;
+    --radius-sm: 10px;
+    --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 2rem 1rem 3rem;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+  .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); border: 0; }
+
+  /* Background orbs */
+  .bg-orb {
+    position: fixed; border-radius: 50%; filter: blur(100px);
+    pointer-events: none; z-index: 0; opacity: 0.20;
+  }
+  .bg-orb--tr { width: 500px; height: 500px; background: radial-gradient(circle, rgba(26,58,106,0.9) 0%, transparent 70%); top: -180px; right: -120px; }
+  .bg-orb--bl { width: 400px; height: 400px; background: radial-gradient(circle, rgba(232,160,32,0.25) 0%, transparent 70%); bottom: -120px; left: -80px; }
+  .bg-orb--mid { width: 350px; height: 350px; background: radial-gradient(circle, rgba(84,108,160,0.4) 0%, transparent 70%); top: 50%; left: 50%; transform: translate(-50%,-50%); }
+
+  .container { max-width: 580px; margin: 0 auto; position: relative; z-index: 1; }
+
+  /* Glass card */
+  .card {
+    background: var(--glass);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+  }
+
+  /* Header */
+  .header {
+    padding: 1.75rem 1.75rem 1.5rem; margin-bottom: 10px;
+    background: linear-gradient(135deg, rgba(26,58,106,0.5) 0%, rgba(15,30,60,0.4) 100%);
+    backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(255,255,255,0.08);
+    position: relative; overflow: hidden;
+  }
+  .header::after {
+    content: ''; position: absolute; top: -30%; right: -15%;
+    width: 220px; height: 220px;
+    background: radial-gradient(circle, rgba(232,160,32,0.06) 0%, transparent 70%);
+    border-radius: 50%; pointer-events: none;
+  }
+  .header-tag { font-size: 10.5px; font-weight: 600; color: #7BA0D0; letter-spacing: 3.5px; text-transform: uppercase; margin-bottom: 6px; position: relative; z-index: 1; }
+  .header h1 { font-size: 21px; font-weight: 600; color: #fff; margin-bottom: 6px; line-height: 1.3; position: relative; z-index: 1; }
+  .header p { font-size: 13px; color: #9DB8DD; line-height: 1.55; margin-bottom: 12px; position: relative; z-index: 1; }
+  .header-meta { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; position: relative; z-index: 1; }
+  .badge { display: inline-flex; align-items: center; background: var(--gold); color: #0A0A18; font-size: 11px; font-weight: 600; padding: 4px 12px; border-radius: 20px; letter-spacing: 0.3px; }
+  .badge-subtle { font-size: 12px; color: #7BA0D0; }
+
+  /* Progress card */
+  .progress-card { padding: 1rem 1.5rem; margin-bottom: 10px; }
+
+  .step-indicator { display: flex; align-items: center; justify-content: center; gap: 6px; margin-bottom: 10px; }
+  .step-dot {
+    width: 10px; height: 10px; border-radius: 50%;
+    background: rgba(255,255,255,0.07);
+    transition: background 0.35s ease, transform 0.35s ease, box-shadow 0.35s ease;
+    position: relative;
+  }
+  .step-dot.done { background: var(--gold); }
+  .step-dot.current {
+    background: var(--gold);
+    transform: scale(1.4);
+    box-shadow: 0 0 10px var(--gold-glow);
+  }
+  .step-dot.pop { animation: dotPop 0.4s ease; }
+  @keyframes dotPop { 0% { transform: scale(1.4); } 50% { transform: scale(2); } 100% { transform: scale(1.4); } }
+
+  .progress-bar { height: 3px; background: rgba(255,255,255,0.06); border-radius: 3px; overflow: hidden; margin-bottom: 6px; }
+  .progress-fill { height: 100%; background: var(--gold); border-radius: 3px; width: 0%; transition: width 0.5s ease; }
+  .progress-text { font-size: 11.5px; color: var(--text-muted); text-align: center; transition: color 0.3s ease; }
+
+  /* Step card */
+  .step-card { padding: 1.75rem; margin-bottom: 10px; min-height: 200px; position: relative; }
+  .step { display: none; }
+  .step.active { display: block; animation: stepIn 0.4s ease both; }
+  @keyframes stepIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+
+  .q-label { font-size: 16px; font-weight: 600; color: var(--text); margin-bottom: 4px; display: block; line-height: 1.4; }
+  .q-label .star { color: var(--error); margin-left: 2px; }
+  .q-hint { font-size: 12.5px; color: var(--text-muted); margin-bottom: 18px; line-height: 1.5; }
+
+  /* Options */
+  .options { display: flex; flex-direction: column; gap: 4px; }
+  .option {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 14px; border-radius: var(--radius-sm);
+    cursor: pointer; transition: background 0.18s ease;
+    font-size: 13.5px; color: var(--text); line-height: 1.4;
+    border: 1px solid transparent;
+  }
+  .option:hover { background: rgba(255,255,255,0.03); border-color: rgba(255,255,255,0.04); }
+  .option input[type="radio"],
+  .option input[type="checkbox"] { position: absolute; opacity: 0; width: 0; height: 0; pointer-events: none; }
+
+  .opt-visual {
+    width: 20px; height: 20px; flex-shrink: 0;
+    border: 1.5px solid rgba(255,255,255,0.18);
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.25s ease; position: relative;
+  }
+  .opt-visual.radio { border-radius: 50%; }
+  .opt-visual.check { border-radius: 5px; }
+  .option:hover .opt-visual { border-color: rgba(255,255,255,0.35); }
+
+  .opt-visual::after {
+    content: ''; position: absolute;
+    transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .opt-visual.radio::after {
+    width: 10px; height: 10px; border-radius: 50%;
+    background: var(--gold); transform: scale(0);
+  }
+  .opt-visual.check::after {
+    width: 6px; height: 10px;
+    border: solid var(--gold); border-width: 0 2px 2px 0;
+    transform: scale(0) rotate(45deg); margin-top: -2px;
+  }
+  .option input:checked ~ .opt-visual { border-color: var(--gold); }
+  .option input:checked ~ .opt-visual::after { transform: scale(1); }
+  .option input:checked ~ .opt-visual.check::after { transform: scale(1) rotate(45deg); }
+  .option input:checked ~ .opt-visual.radio { box-shadow: 0 0 0 3px var(--gold-subtle); }
+  .option input:checked ~ .opt-visual.check { box-shadow: 0 0 0 3px var(--gold-subtle); }
+
+  .opt-text { transition: color 0.2s ease; }
+  .option input:checked ~ .opt-text { color: #fff; }
+
+  /* Text inputs */
+  .field textarea,
+  .field input[type="text"] {
+    width: 100%; border: 1px solid rgba(255,255,255,0.08);
+    border-radius: var(--radius-sm); padding: 10px 14px;
+    font-size: 14px; font-family: var(--font); color: var(--text);
+    background: var(--glass-input); outline: none;
+    transition: border-color 0.25s ease, box-shadow 0.25s ease;
+    -webkit-appearance: none; resize: vertical;
+  }
+  .field input[type="text"]:focus,
+  .field textarea:focus { border-color: rgba(232,160,32,0.45); box-shadow: 0 0 0 3px var(--gold-subtle); }
+  .field textarea::placeholder,
+  .field input::placeholder { color: var(--text-dim); }
+  .field textarea { min-height: 100px; }
+  .field-row { display: flex; gap: 12px; }
+  .field-row .field { flex: 1; }
+  .char-count { font-size: 11px; color: var(--text-dim); text-align: right; margin-top: 4px; }
+
+  /* Step error */
+  .step-err {
+    display: none; padding: 9px 14px; margin-top: 14px;
+    background: var(--error-glass); border: 1px solid rgba(239,68,68,0.2);
+    border-radius: var(--radius-sm); font-size: 12.5px; color: #FCA5A5;
+  }
+  .step-err.active { display: block; animation: fadeIn 0.25s ease; }
+
+  /* Navigation */
+  .nav-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+  .btn-back, .btn-next, .btn-submit {
+    font-family: var(--font); font-size: 13.5px; font-weight: 500;
+    padding: 10px 22px; border-radius: 50px; cursor: pointer;
+    transition: all 0.22s ease; display: inline-flex; align-items: center; gap: 6px;
+    white-space: nowrap; position: relative; overflow: hidden;
+  }
+  .btn-back {
+    background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);
+    color: var(--text-muted); transition: all 0.22s ease;
+  }
+  .btn-back:hover { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.15); color: var(--text); }
+  .btn-back:active { transform: scale(0.97); }
+  .btn-next {
+    background: var(--gold); border: none; color: #0A0A18; font-weight: 600;
+  }
+  .btn-next:hover { background: #F0B030; transform: translateY(-1px); box-shadow: 0 4px 20px rgba(232,160,32,0.3); }
+  .btn-next:active { transform: scale(0.97) translateY(0); }
+  .btn-submit {
+    background: linear-gradient(135deg, var(--gold) 0%, #D4911A 100%);
+    border: none; color: #0A0A18; font-weight: 600; padding: 12px 32px; font-size: 14px;
+  }
+  .btn-submit:hover { transform: translateY(-1px); box-shadow: 0 4px 24px rgba(232,160,32,0.4); }
+  .btn-submit:active { transform: scale(0.97); }
+  .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+  .btn-submit .spinner {
+    display: none; width: 16px; height: 16px;
+    border: 2px solid rgba(10,10,24,0.25); border-top-color: #0A0A18;
+    border-radius: 50%; animation: spin 0.6s linear infinite;
+  }
+  .btn-submit.loading .spinner { display: inline-block; }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* Global error */
+  .global-err {
+    display: none; padding: 10px 16px; margin-top: 10px;
+    background: var(--error-glass); border: 1px solid rgba(239,68,68,0.2);
+    border-radius: var(--radius-sm); font-size: 13px; color: #FCA5A5;
+  }
+  .global-err.active { display: block; animation: fadeIn 0.25s ease; }
+
+  /* Success */
+  .success-state { display: none; }
+  .success-state.active { display: block; }
+  .form-state { display: block; }
+  .form-state.hidden { display: none; }
+
+  .success-card {
+    background: var(--glass); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(255,255,255,0.08); border-radius: var(--radius);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4); padding: 3rem 2rem; text-align: center;
+    animation: stepIn 0.5s ease;
+  }
+  .success-icon {
+    width: 68px; height: 68px; border-radius: 50%;
+    background: var(--success-glass); border: 1px solid rgba(16,185,129,0.2);
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 1.25rem; font-size: 30px; color: var(--success);
+  }
+  .success-card h2 { font-size: 21px; font-weight: 600; margin-bottom: 8px; color: #fff; }
+  .success-card p { font-size: 14px; color: var(--text-muted); line-height: 1.6; max-width: 380px; margin: 0 auto; }
+  .success-card .badge-row { margin-top: 22px; display: flex; justify-content: center; }
+
+  /* Responsive */
+  @media (max-width: 500px) {
+    body { padding: 1rem 0.75rem 2rem; }
+    .header { padding: 1.35rem 1.25rem 1.15rem; }
+    .header h1 { font-size: 18px; }
+    .header-tag { font-size: 10px; letter-spacing: 2.5px; }
+    .step-card { padding: 1.25rem; }
+    .nav-bar { flex-wrap: nowrap; }
+    .btn-back, .btn-next, .btn-submit { font-size: 12.5px; padding: 8px 16px; }
+    .field-row { flex-direction: column; gap: 8px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="bg-orb bg-orb--tr"></div>
+<div class="bg-orb bg-orb--bl"></div>
+
+<div class="container">
+
+  <div class="success-state" id="successState">
+    <div class="success-card">
+      <div class="success-icon">&#10003;</div>
+      <h2>You're all set!</h2>
+      <p>Thanks for your responses. We'll use them to make Friday's session the best one yet. See you there!</p>
+      <div class="badge-row"><span class="badge">THIS FRIDAY &middot; 4PM</span></div>
+    </div>
+  </div>
+
+  <div class="form-state" id="formState">
+    <header class="card header">
+      <div class="header-tag">Skills for All &middot; Cohort 3.0</div>
+      <h1>Friday Session &mdash; Quick Pre-Check</h1>
+      <p>Two minutes. Six questions. Help us make Friday's session the best one yet.</p>
+      <div class="header-meta">
+        <span class="badge">LIVE THIS FRIDAY &middot; 4PM</span>
+        <span class="badge-subtle">6 questions &middot; 2 min</span>
+      </div>
+    </header>
+
+    <div class="card progress-card">
+      <div class="step-indicator" id="stepIndicator">
+        <span class="step-dot current" data-dot="1"></span>
+        <span class="step-dot" data-dot="2"></span>
+        <span class="step-dot" data-dot="3"></span>
+        <span class="step-dot" data-dot="4"></span>
+        <span class="step-dot" data-dot="5"></span>
+        <span class="step-dot" data-dot="6"></span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" id="progressFill" style="width:16.67%"></div>
+      </div>
+      <div class="progress-text" id="progressText">Question 1 of 6</div>
+    </div>
+
+    <div class="card step-card" id="stepCard">
+      <form id="surveyForm" novalidate>
+
+        <div class="step active" data-step="1">
+          <label class="q-label">Which track are you on? <span class="star">*</span></label>
+          <p class="q-hint">Select one</p>
+          <div class="options">
+            <label class="option">
+              <input type="radio" name="track" value="culinary_arts" required>
+              <span class="opt-visual radio"></span>
+              <span class="opt-text">Culinary Arts — Hilda Baci</span>
+            </label>
+            <label class="option">
+              <input type="radio" name="track" value="fashion_styling">
+              <span class="opt-visual radio"></span>
+              <span class="opt-text">Fashion Styling — Swanky Jerry</span>
+            </label>
+            <label class="option">
+              <input type="radio" name="track" value="music_business">
+              <span class="opt-visual radio"></span>
+              <span class="opt-text">Music Business — Asa Asika</span>
+            </label>
+            <label class="option">
+              <input type="radio" name="track" value="dj">
+              <span class="opt-visual radio"></span>
+              <span class="opt-text">DJing — DJ Xclusive</span>
+            </label>
+            <label class="option">
+              <input type="radio" name="track" value="songwriting">
+              <span class="opt-visual radio"></span>
+              <span class="opt-text">Songwriting — Johnny Drille</span>
+            </label>
+            <label class="option">
+              <input type="radio" name="track" value="music_production">
+              <span class="opt-visual radio"></span>
+              <span class="opt-text">Music Production &amp; Business — Johnny Drille</span>
+            </label>
+            <label class="option">
+              <input type="radio" name="track" value="sports_management">
+              <span class="opt-visual radio"></span>
+              <span class="opt-text">Sports Management — Lanre Vigo</span>
+            </label>
+            <label class="option">
+              <input type="radio" name="track" value="music_career_launch">
+              <span class="opt-visual radio"></span>
+              <span class="opt-text">Music Career Launch — Wavy The Creator</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="step" data-step="2">
+          <label class="q-label">What is your biggest challenge right now? <span class="star">*</span></label>
+          <p class="q-hint">Select all that apply</p>
+          <div class="options">
+            <label class="option">
+              <input type="checkbox" name="challenges" value="pricing">
+              <span class="opt-visual check"></span>
+              <span class="opt-text">Pricing my work — I don't know what to charge</span>
+            </label>
+            <label class="option">
+              <input type="checkbox" name="challenges" value="finding_clients">
+              <span class="opt-visual check"></span>
+              <span class="opt-text">Finding clients — I can't seem to get consistent work</span>
+            </label>
+            <label class="option">
+              <input type="checkbox" name="challenges" value="online_presence">
+              <span class="opt-visual check"></span>
+              <span class="opt-text">Building my online presence — I'm invisible online</span>
+            </label>
+            <label class="option">
+              <input type="checkbox" name="challenges" value="corporate_clients">
+              <span class="opt-visual check"></span>
+              <span class="opt-text">Landing corporate or business clients</span>
+            </label>
+            <label class="option">
+              <input type="checkbox" name="challenges" value="consistency">
+              <span class="opt-visual check"></span>
+              <span class="opt-text">Staying consistent — I start and stop too often</span>
+            </label>
+            <label class="option">
+              <input type="checkbox" name="challenges" value="technology">
+              <span class="opt-visual check"></span>
+              <span class="opt-text">Using technology and tools to grow my career</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="step" data-step="3">
+          <label class="q-label">Have you made money from your creative skills yet? <span class="star">*</span></label>
+          <p class="q-hint">Be honest — this is just between us</p>
+          <div class="options">
+            <label class="option">
+              <input type="radio" name="money_status" value="regular_income" required>
+              <span class="opt-visual radio"></span>
+              <span class="opt-text">Yes, regularly — this is already my income</span>
+            </label>
+            <label class="option">
+              <input type="radio" name="money_status" value="occasional_gigs">
+              <span class="opt-visual radio"></span>
+              <span class="opt-text">Yes, occasionally — a few gigs here and there</span>
+            </label>
+            <label class="option">
+              <input type="radio" name="money_status" value="very_close">
+              <span class="opt-visual radio"></span>
+              <span class="opt-text">Not yet, but I'm very close</span>
+            </label>
+            <label class="option">
+              <input type="radio" name="money_status" value="not_yet">
+              <span class="opt-visual radio"></span>
+              <span class="opt-text">Not yet — that's why I'm here</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="step" data-step="4">
+          <label class="q-label" for="success_vision">In one sentence — what does success look like for you one year from now? <span class="star">*</span></label>
+          <p class="q-hint">Be specific. "I want to be earning from my craft" is good. "I want to be famous" is too vague.</p>
+          <div class="field">
+            <textarea id="success_vision" name="success_vision" maxlength="500" placeholder="In one year, I want to..." required></textarea>
+            <div class="char-count"><span id="visionCount">0</span>/500</div>
+          </div>
+        </div>
+
+        <div class="step" data-step="5">
+          <label class="q-label" for="question">What is the one question you most want answered on Friday? <span class="star">*</span></label>
+          <p class="q-hint">We may address yours live in the session.</p>
+          <div class="field">
+            <textarea id="question" name="question" maxlength="500" placeholder="My question is..." required></textarea>
+            <div class="char-count"><span id="questionCount">0</span>/500</div>
+          </div>
+        </div>
+
+        <div class="step" data-step="6">
+          <label class="q-label">One last thing — what is your first name and state? <span class="star">*</span></label>
+          <p class="q-hint">So we know who's in the room with us on Friday.</p>
+          <div class="field-row">
+            <div class="field">
+              <input type="text" id="firstName" name="first_name" placeholder="First name" required>
+            </div>
+            <div class="field">
+              <input type="text" id="state" name="state" placeholder="State" required>
+            </div>
+          </div>
+        </div>
+      </form>
+
+      <div class="step-err" id="stepErr"></div>
+    </div>
+
+    <div class="nav-bar">
+      <button class="btn-back" id="btnBack" style="visibility:hidden">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 4L6 8L10 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Back
+      </button>
+      <button class="btn-next" id="btnNext">
+        Next
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 4L10 8L6 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <div id="submitWrap" style="display:none;">
+        <button class="btn-submit" id="btnSubmit" type="button">
+          <span class="spinner"></span>
+          <span class="btn-text">Submit</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="global-err" id="globalErr"></div>
+  </div>
+</div>
+
+<script>
+(function() {
+  const form = document.getElementById('surveyForm');
+  const formState = document.getElementById('formState');
+  const successState = document.getElementById('successState');
+  const stepCard = document.getElementById('stepCard');
+  const stepErr = document.getElementById('stepErr');
+  const globalErr = document.getElementById('globalErr');
+  const progressFill = document.getElementById('progressFill');
+  const progressText = document.getElementById('progressText');
+  const btnBack = document.getElementById('btnBack');
+  const btnNext = document.getElementById('btnNext');
+  const btnSubmit = document.getElementById('btnSubmit');
+  const submitWrap = document.getElementById('submitWrap');
+
+  const TOTAL = 6;
+  let currentStep = 1;
+
+  const stepValidations = {
+    1: function() { return form.querySelector('input[name="track"]:checked') !== null; },
+    2: function() { return form.querySelectorAll('input[name="challenges"]:checked').length > 0; },
+    3: function() { return form.querySelector('input[name="money_status"]:checked') !== null; },
+    4: function() { return document.getElementById('success_vision').value.trim() !== ''; },
+    5: function() { return document.getElementById('question').value.trim() !== ''; },
+    6: function() { return document.getElementById('firstName').value.trim() !== '' && document.getElementById('state').value.trim() !== ''; },
+  };
+
+  var errorMessages = {
+    1: 'Please select your track to continue.',
+    2: 'Select at least one challenge.',
+    3: 'Please select your income status.',
+    4: 'Tell us what success looks like for you.',
+    5: 'What question would you like answered?',
+    6: 'Please fill in both your first name and state.',
+  };
+
+  function clearStepErr() { stepErr.classList.remove('active'); stepErr.textContent = ''; }
+  function clearGlobalErr() { globalErr.classList.remove('active'); globalErr.textContent = ''; }
+
+  function showStepErr(msg) {
+    stepErr.textContent = msg;
+    stepErr.classList.add('active');
+    stepErr.style.animation = 'none';
+    stepErr.offsetHeight;
+    stepErr.style.animation = 'fadeIn 0.25s ease';
+  }
+
+  function showGlobalErr(msg) {
+    globalErr.textContent = msg;
+    globalErr.classList.add('active');
+    globalErr.style.animation = 'none';
+    globalErr.offsetHeight;
+    globalErr.style.animation = 'fadeIn 0.25s ease';
+  }
+
+  function updateUI() {
+    var pct = Math.round((currentStep / TOTAL) * 100);
+    progressFill.style.width = pct + '%';
+    progressText.textContent = 'Question ' + currentStep + ' of ' + TOTAL;
+
+    var dots = document.querySelectorAll('.step-dot');
+    dots.forEach(function(dot, i) {
+      dot.classList.remove('done', 'current', 'pop');
+      if (i + 1 < currentStep) dot.classList.add('done');
+      if (i + 1 === currentStep) { dot.classList.add('current'); dot.classList.add('pop'); }
+    });
+
+    btnBack.style.visibility = currentStep === 1 ? 'hidden' : 'visible';
+    btnBack.style.opacity = currentStep === 1 ? '0' : '1';
+    btnBack.style.pointerEvents = currentStep === 1 ? 'none' : 'auto';
+
+    if (currentStep === TOTAL) {
+      btnNext.style.display = 'none';
+      submitWrap.style.display = 'block';
+    } else {
+      btnNext.style.display = 'inline-flex';
+      submitWrap.style.display = 'none';
+    }
+
+    clearStepErr();
+
+    if (currentStep === 4) setTimeout(function() { document.getElementById('success_vision').focus(); }, 100);
+    if (currentStep === 5) setTimeout(function() { document.getElementById('question').focus(); }, 100);
+    if (currentStep === 6) setTimeout(function() { document.getElementById('firstName').focus(); }, 100);
+  }
+
+  function goToStep(step) {
+    document.querySelector('.step[data-step="' + currentStep + '"]').classList.remove('active');
+    var newEl = document.querySelector('.step[data-step="' + step + '"]');
+    newEl.classList.add('active');
+    newEl.style.animation = 'none';
+    newEl.offsetHeight;
+    newEl.style.animation = 'stepIn 0.4s ease both';
+    currentStep = step;
+    updateUI();
+    stepCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  function handleNext() {
+    clearStepErr(); clearGlobalErr();
+    if (!stepValidations[currentStep]()) {
+      showStepErr(errorMessages[currentStep]);
+      var errDot = document.querySelector('.step-dot.current');
+      if (errDot) { errDot.style.boxShadow = '0 0 12px rgba(239,68,68,0.5)'; errDot.style.background = 'var(--error)'; setTimeout(function() { var d = document.querySelector('.step-dot.current'); if (d) { d.style.boxShadow = '0 0 10px var(--gold-glow)'; d.style.background = 'var(--gold)'; } }, 1000); }
+      return;
+    }
+    if (currentStep < TOTAL) goToStep(currentStep + 1);
+  }
+
+  function handleBack() {
+    clearStepErr(); clearGlobalErr();
+    if (currentStep > 1) goToStep(currentStep - 1);
+  }
+
+  function handleSubmit() {
+    clearStepErr(); clearGlobalErr();
+    if (!stepValidations[6]()) { showStepErr(errorMessages[6]); return; }
+
+    btnSubmit.disabled = true;
+    btnSubmit.classList.add('loading');
+    submitWrap.style.display = 'block';
+
+    var data = {};
+
+    var track = form.querySelector('input[name="track"]:checked');
+    if (track) data.track = track.value;
+
+    var challenges = Array.from(form.querySelectorAll('input[name="challenges"]:checked')).map(function(c) { return c.value; });
+    if (challenges.length > 0) data.challenges = challenges;
+
+    var money = form.querySelector('input[name="money_status"]:checked');
+    if (money) data.money_status = money.value;
+
+    data.success_vision = document.getElementById('success_vision').value.trim();
+    data.question = document.getElementById('question').value.trim();
+    data.first_name = document.getElementById('firstName').value.trim();
+    data.state = document.getElementById('state').value.trim();
+
+    fetch('/api/submit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    })
+    .then(function(res) { return res.json(); })
+    .then(function(result) {
+      if (result.success) {
+        formState.classList.add('hidden');
+        successState.classList.add('active');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        throw new Error(result.error || 'Submission failed');
+      }
+    })
+    .catch(function(err) {
+      showGlobalErr('Something went wrong: ' + err.message + '. Please try again.');
+      btnSubmit.disabled = false;
+      btnSubmit.classList.remove('loading');
+    });
+  }
+
+  btnNext.addEventListener('click', handleNext);
+  btnBack.addEventListener('click', handleBack);
+  btnSubmit.addEventListener('click', handleSubmit);
+
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      var tag = document.activeElement.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA') {
+        if (currentStep === TOTAL && tag === 'INPUT') {
+          e.preventDefault(); handleSubmit();
+        } else if (currentStep < TOTAL && tag === 'INPUT') {
+          e.preventDefault(); handleNext();
+        }
+      }
+    }
+  });
+
+  document.getElementById('success_vision').addEventListener('input', function() {
+    document.getElementById('visionCount').textContent = this.value.length;
+  });
+  document.getElementById('question').addEventListener('input', function() {
+    document.getElementById('questionCount').textContent = this.value.length;
+  });
+
+  updateUI();
+})();
+</script>
+
+</body>
+</html>

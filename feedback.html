@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SFA Post-Session Feedback — Skills for All</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #08080E;
+    --glass: rgba(18, 18, 28, 0.65);
+    --glass-input: rgba(0, 0, 0, 0.35);
+    --border: rgba(255, 255, 255, 0.06);
+    --text: #E8E8F0;
+    --text-muted: #8888A2;
+    --text-dim: #5C5C74;
+    --gold: #E8A020;
+    --gold-glow: rgba(232, 160, 32, 0.35);
+    --gold-subtle: rgba(232, 160, 32, 0.1);
+    --error: #EF4444;
+    --error-glass: rgba(239, 68, 68, 0.08);
+    --success: #10B981;
+    --success-glass: rgba(16, 185, 129, 0.08);
+    --radius: 16px;
+    --radius-sm: 10px;
+    --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: var(--font); background: var(--bg); color: var(--text);
+    min-height: 100vh; padding: 2rem 1rem 3rem;
+    -webkit-font-smoothing: antialiased; overflow-x: hidden;
+  }
+  .bg-orb { position: fixed; border-radius: 50%; filter: blur(100px); pointer-events: none; z-index: 0; opacity: 0.20; }
+  .bg-orb--tr { width: 500px; height: 500px; background: radial-gradient(circle, rgba(26,58,106,0.9) 0%, transparent 70%); top: -180px; right: -120px; }
+  .bg-orb--bl { width: 400px; height: 400px; background: radial-gradient(circle, rgba(232,160,32,0.25) 0%, transparent 70%); bottom: -120px; left: -80px; }
+  .container { max-width: 580px; margin: 0 auto; position: relative; z-index: 1; }
+  .card { background: var(--glass); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: 0 8px 32px rgba(0,0,0,0.25); }
+  .card + .card { margin-top: 10px; }
+  .section { display: none; }
+  .section.active { display: block; }
+
+  /* Header */
+  .header {
+    padding: 1.75rem 1.75rem 1.5rem;
+    background: linear-gradient(135deg, rgba(26,58,106,0.5) 0%, rgba(15,30,60,0.4) 100%);
+    backdrop-filter: blur(24px); border: 1px solid rgba(255,255,255,0.08);
+    position: relative; overflow: hidden;
+  }
+  .header::after { content: ''; position: absolute; top: -30%; right: -15%; width: 220px; height: 220px; background: radial-gradient(circle, rgba(232,160,32,0.06) 0%, transparent 70%); border-radius: 50%; pointer-events: none; }
+  .header-tag { font-size: 10.5px; font-weight: 600; color: #7BA0D0; letter-spacing: 3.5px; text-transform: uppercase; margin-bottom: 6px; position: relative; z-index: 1; }
+  .header h1 { font-size: 21px; font-weight: 600; color: #fff; margin-bottom: 6px; line-height: 1.3; position: relative; z-index: 1; }
+  .header p { font-size: 13px; color: #9DB8DD; line-height: 1.55; margin-bottom: 12px; position: relative; z-index: 1; }
+  .header-meta { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; position: relative; z-index: 1; }
+  .badge { display: inline-flex; align-items: center; background: var(--gold); color: #0A0A18; font-size: 11px; font-weight: 600; padding: 4px 12px; border-radius: 20px; }
+  .badge-subtle { font-size: 12px; color: #7BA0D0; }
+  .header.center { text-align: center; }
+
+  /* Verify card */
+  .verify-card { padding: 1.75rem; }
+  .verify-card .q-label { margin-bottom: 6px; }
+  .verify-card .field { margin-bottom: 14px; }
+  .verify-card .field:last-of-type { margin-bottom: 20px; }
+  .verify-btn {
+    width: 100%; justify-content: center; padding: 12px 24px;
+    font-family: var(--font); font-size: 14px; font-weight: 600;
+    border: none; border-radius: 50px; cursor: pointer;
+    background: var(--gold); color: #0A0A18;
+    transition: all 0.22s ease; display: inline-flex; align-items: center; gap: 8px;
+  }
+  .verify-btn:hover { background: #F0B030; transform: translateY(-1px); box-shadow: 0 4px 20px rgba(232,160,32,0.3); }
+  .verify-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+  .verify-btn .spinner {
+    display: none; width: 16px; height: 16px;
+    border: 2px solid rgba(10,10,24,0.25); border-top-color: #0A0A18;
+    border-radius: 50%; animation: spin 0.6s linear infinite;
+  }
+  .verify-btn.loading .spinner { display: inline-block; }
+  .verify-confirmed {
+    display: none; text-align: center; padding: 1.5rem;
+  }
+  .verify-confirmed.active { display: block; animation: stepIn 0.4s ease; }
+  .verify-confirmed .name { font-size: 15px; font-weight: 600; color: #fff; margin-bottom: 4px; }
+  .verify-confirmed .track-info { font-size: 13px; color: var(--text-muted); margin-bottom: 16px; }
+  .verify-confirmed .btn-start {
+    background: var(--gold); color: #0A0A18; border: none;
+    padding: 10px 28px; border-radius: 50px; font-size: 14px; font-weight: 600;
+    font-family: var(--font); cursor: pointer; transition: all 0.22s ease;
+  }
+  .verify-confirmed .btn-start:hover { background: #F0B030; transform: translateY(-1px); }
+
+  /* Inputs */
+  .field input[type="text"], .field select, .field textarea {
+    width: 100%; border: 1px solid rgba(255,255,255,0.08);
+    border-radius: var(--radius-sm); padding: 10px 14px;
+    font-size: 14px; font-family: var(--font); color: var(--text);
+    background: var(--glass-input); outline: none;
+    transition: border-color 0.25s ease, box-shadow 0.25s ease;
+    -webkit-appearance: none; appearance: none;
+  }
+  .field input:focus, .field select:focus, .field textarea:focus { border-color: rgba(232,160,32,0.45); box-shadow: 0 0 0 3px var(--gold-subtle); }
+  .field input::placeholder, .field textarea::placeholder { color: var(--text-dim); }
+  .field textarea { resize: vertical; min-height: 100px; }
+  .field select { cursor: pointer; }
+  .field select option { background: #1A1A28; color: var(--text); }
+  .char-count { font-size: 11px; color: var(--text-dim); text-align: right; margin-top: 3px; }
+
+  /* Progress */
+  .progress-card { padding: 1rem 1.5rem; }
+  .step-indicator { display: flex; align-items: center; justify-content: center; gap: 5px; margin-bottom: 10px; }
+  .step-dot {
+    width: 9px; height: 9px; border-radius: 50%;
+    background: rgba(255,255,255,0.07);
+    transition: background 0.35s ease, transform 0.35s ease, box-shadow 0.35s ease;
+  }
+  .step-dot.done { background: var(--gold); }
+  .step-dot.current { background: var(--gold); transform: scale(1.4); box-shadow: 0 0 10px var(--gold-glow); }
+  .step-dot.pop { animation: dotPop 0.4s ease; }
+  @keyframes dotPop { 0% { transform: scale(1.4); } 50% { transform: scale(2); } 100% { transform: scale(1.4); } }
+  .progress-bar { height: 3px; background: rgba(255,255,255,0.06); border-radius: 3px; overflow: hidden; margin-bottom: 6px; }
+  .progress-fill { height: 100%; background: var(--gold); border-radius: 3px; width: 0%; transition: width 0.5s ease; }
+  .progress-text { font-size: 11.5px; color: var(--text-muted); text-align: center; }
+
+  /* Steps */
+  .step-card { padding: 1.75rem; min-height: 180px; position: relative; }
+  .step { display: none; }
+  .step.active { display: block; animation: stepIn 0.4s ease both; }
+  @keyframes stepIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+  .q-label { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 4px; display: block; line-height: 1.4; }
+  .q-label .star { color: var(--error); margin-left: 2px; }
+  .q-hint { font-size: 12.5px; color: var(--text-muted); margin-bottom: 16px; line-height: 1.5; }
+
+  /* Options (radio/checkbox) */
+  .options { display: flex; flex-direction: column; gap: 4px; }
+  .option {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 14px; border-radius: var(--radius-sm);
+    cursor: pointer; transition: background 0.18s ease;
+    font-size: 13.5px; color: var(--text); line-height: 1.4;
+    border: 1px solid transparent;
+  }
+  .option:hover { background: rgba(255,255,255,0.03); border-color: rgba(255,255,255,0.04); }
+  .option input { position: absolute; opacity: 0; width: 0; height: 0; pointer-events: none; }
+  .opt-visual {
+    width: 20px; height: 20px; flex-shrink: 0;
+    border: 1.5px solid rgba(255,255,255,0.18);
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.25s ease; position: relative;
+  }
+  .opt-visual.radio { border-radius: 50%; }
+  .opt-visual.check { border-radius: 5px; }
+  .option:hover .opt-visual { border-color: rgba(255,255,255,0.35); }
+  .opt-visual::after {
+    content: ''; position: absolute;
+    transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .opt-visual.radio::after { width: 10px; height: 10px; border-radius: 50%; background: var(--gold); transform: scale(0); }
+  .opt-visual.check::after { width: 6px; height: 10px; border: solid var(--gold); border-width: 0 2px 2px 0; transform: scale(0) rotate(45deg); margin-top: -2px; }
+  .option input:checked ~ .opt-visual { border-color: var(--gold); }
+  .option input:checked ~ .opt-visual::after { transform: scale(1); }
+  .option input:checked ~ .opt-visual.check::after { transform: scale(1) rotate(45deg); }
+  .option input:checked ~ .opt-visual.radio { box-shadow: 0 0 0 3px var(--gold-subtle); }
+  .option input:checked ~ .opt-visual.check { box-shadow: 0 0 0 3px var(--gold-subtle); }
+  .opt-text { transition: color 0.2s ease; }
+  .option input:checked ~ .opt-text { color: #fff; }
+
+  /* Emoji rating */
+  .rating-row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+  .rating-opt {
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+    cursor: pointer; padding: 10px 12px; border-radius: var(--radius-sm);
+    border: 1.5px solid rgba(255,255,255,0.06); background: rgba(255,255,255,0.02);
+    transition: all 0.2s ease; min-width: 56px;
+  }
+  .rating-opt:hover { border-color: rgba(255,255,255,0.15); background: rgba(255,255,255,0.04); }
+  .rating-opt input { position: absolute; opacity: 0; width: 0; height: 0; pointer-events: none; }
+  .rating-opt .emoji { font-size: 24px; line-height: 1; transition: transform 0.2s ease; }
+  .rating-opt .num { font-size: 11px; color: var(--text-dim); font-weight: 500; }
+  .rating-opt input:checked ~ .emoji { transform: scale(1.2); }
+  .rating-opt input:checked + .emoji + .num { color: var(--gold); }
+  .rating-opt:has(input:checked) { border-color: var(--gold); background: var(--gold-subtle); box-shadow: 0 0 0 3px var(--gold-subtle); }
+
+  /* Optional field */
+  .optional-field { margin-top: 8px; }
+
+  /* Step error */
+  .step-err {
+    display: none; padding: 9px 14px; margin-top: 14px;
+    background: var(--error-glass); border: 1px solid rgba(239,68,68,0.2);
+    border-radius: var(--radius-sm); font-size: 12.5px; color: #FCA5A5;
+  }
+  .step-err.active { display: block; animation: fadeIn 0.25s ease; }
+
+  /* Navigation */
+  .nav-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+  .btn-back, .btn-next, .btn-submit {
+    font-family: var(--font); font-size: 13.5px; font-weight: 500;
+    padding: 10px 22px; border-radius: 50px; cursor: pointer;
+    transition: all 0.22s ease; display: inline-flex; align-items: center; gap: 6px;
+    white-space: nowrap;
+  }
+  .btn-back { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); color: var(--text-muted); }
+  .btn-back:hover { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.15); color: var(--text); }
+  .btn-back:active { transform: scale(0.97); }
+  .btn-next { background: var(--gold); border: none; color: #0A0A18; font-weight: 600; }
+  .btn-next:hover { background: #F0B030; transform: translateY(-1px); box-shadow: 0 4px 20px rgba(232,160,32,0.3); }
+  .btn-next:active { transform: scale(0.97) translateY(0); }
+  .btn-submit { background: linear-gradient(135deg, var(--gold) 0%, #D4911A 100%); border: none; color: #0A0A18; font-weight: 600; padding: 12px 32px; font-size: 14px; }
+  .btn-submit:hover { transform: translateY(-1px); box-shadow: 0 4px 24px rgba(232,160,32,0.4); }
+  .btn-submit:active { transform: scale(0.97); }
+  .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+  .btn-submit .spinner { display: none; width: 16px; height: 16px; border: 2px solid rgba(10,10,24,0.25); border-top-color: #0A0A18; border-radius: 50%; animation: spin 0.6s linear infinite; }
+  .btn-submit.loading .spinner { display: inline-block; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* Global error */
+  .global-err { display: none; padding: 10px 16px; margin-top: 10px; background: var(--error-glass); border: 1px solid rgba(239,68,68,0.2); border-radius: var(--radius-sm); font-size: 13px; color: #FCA5A5; }
+  .global-err.active { display: block; animation: fadeIn 0.25s ease; }
+
+  /* Success */
+  .success-card {
+    background: var(--glass); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(255,255,255,0.08); border-radius: var(--radius);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4); padding: 3rem 2rem; text-align: center;
+    animation: stepIn 0.5s ease;
+  }
+  .success-icon { width: 68px; height: 68px; border-radius: 50%; background: var(--success-glass); border: 1px solid rgba(16,185,129,0.2); display: flex; align-items: center; justify-content: center; margin: 0 auto 1.25rem; font-size: 30px; color: var(--success); }
+  .success-card h2 { font-size: 21px; font-weight: 600; margin-bottom: 8px; color: #fff; }
+  .success-card p { font-size: 14px; color: var(--text-muted); line-height: 1.6; max-width: 380px; margin: 0 auto; }
+  .success-card .badge-row { margin-top: 22px; display: flex; justify-content: center; }
+
+  /* Helpers */
+  .mt-8 { margin-top: 8px; }
+
+  @media (max-width: 500px) {
+    body { padding: 1rem 0.75rem 2rem; }
+    .header { padding: 1.35rem 1.25rem 1.15rem; }
+    .header h1 { font-size: 18px; }
+    .header-tag { font-size: 10px; letter-spacing: 2.5px; }
+    .step-card, .verify-card { padding: 1.25rem; }
+    .nav-bar { flex-wrap: nowrap; }
+    .btn-back, .btn-next, .btn-submit { font-size: 12.5px; padding: 8px 16px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="bg-orb bg-orb--tr"></div>
+<div class="bg-orb bg-orb--bl"></div>
+
+<div class="container">
+
+  <!-- SUCCESS -->
+  <div id="successState" style="display:none">
+    <div class="success-card">
+      <div class="success-icon">&#10003;</div>
+      <h2>Thank you!</h2>
+      <p>Your feedback helps us build better sessions for you. We appreciate you showing up and sharing honestly.</p>
+      <div class="badge-row" style="margin-top:20px">
+        <a href="/" class="badge" style="text-decoration:none;color:#0A0A18;padding:6px 16px;font-size:12px">&larr; Back to Home</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- VERIFY -->
+  <div class="section active" id="verifySection">
+    <div class="card header center">
+      <div class="header-tag">Skills for All &middot; Cohort 3.0</div>
+      <h1>Post-Session Feedback</h1>
+      <p>Two minutes. Tell us honestly. Your feedback shapes what we build next.</p>
+      <div class="header-meta">
+        <span class="badge">THE BUSINESS BEHIND THE BRAND</span>
+      </div>
+    </div>
+
+    <div class="card verify-card">
+      <div id="verifyForm">
+        <div class="q-label" style="margin-bottom:14px;font-size:16px">Verify your attendance</div>
+        <p class="q-hint">Enter the same name, state, and track you used in the pre-check form so we can match your feedback.</p>
+
+        <div class="field">
+          <label class="q-label" for="verifyName">What is your first name? <span class="star">*</span></label>
+          <input type="text" id="verifyName" placeholder="First name">
+        </div>
+
+        <div class="field">
+          <label class="q-label" for="verifyState">What state are you from? <span class="star">*</span></label>
+          <input type="text" id="verifyState" placeholder="State">
+        </div>
+
+        <div class="field">
+          <label class="q-label" for="verifyTrack">Which track are you in? <span class="star">*</span></label>
+          <select id="verifyTrack">
+            <option value="">Select your track...</option>
+            <option value="culinary_arts">Culinary Arts — Hilda Baci</option>
+            <option value="fashion_styling">Fashion Styling — Swanky Jerry</option>
+            <option value="music_business">Music Business — Asa Asika</option>
+            <option value="dj">DJing — DJ Xclusive</option>
+            <option value="songwriting">Songwriting — Johnny Drille</option>
+            <option value="music_production">Music Production &amp; Business — Johnny Drille</option>
+            <option value="sports_management">Sports Management — Lanre Vigo</option>
+            <option value="music_career_launch">Music Career Launch — Wavy The Creator</option>
+          </select>
+        </div>
+
+        <button class="verify-btn" id="verifyBtn" type="button">
+          <span class="spinner"></span>
+          <span>Verify &amp; Continue</span>
+        </button>
+      </div>
+
+      <div class="verify-confirmed" id="verifyConfirmed">
+        <div class="name" id="confirmedName"></div>
+        <div class="track-info" id="confirmedTrack"></div>
+        <button class="btn-start" id="startFeedbackBtn">Start Feedback &rarr;</button>
+      </div>
+
+      <div class="step-err" id="verifyErr"></div>
+    </div>
+  </div>
+
+  <!-- FEEDBACK FORM -->
+  <div class="section" id="feedbackSection">
+
+    <div class="card progress-card">
+      <div class="step-indicator" id="stepIndicator">
+        <span class="step-dot current" data-dot="1"></span>
+        <span class="step-dot" data-dot="2"></span>
+        <span class="step-dot" data-dot="3"></span>
+        <span class="step-dot" data-dot="4"></span>
+        <span class="step-dot" data-dot="5"></span>
+        <span class="step-dot" data-dot="6"></span>
+        <span class="step-dot" data-dot="7"></span>
+        <span class="step-dot" data-dot="8"></span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:12.5%"></div></div>
+      <div class="progress-text" id="progressText">Question 1 of 8</div>
+    </div>
+
+    <div class="card step-card">
+      <form id="feedbackForm" novalidate>
+
+        <div class="step active" data-step="1">
+          <label class="q-label">Which track are you on? <span class="star">*</span></label>
+          <p class="q-hint" style="margin-bottom:6px">Confirming your track</p>
+          <div class="options" id="trackOptions">
+            <label class="option"><input type="radio" name="track" value="culinary_arts"><span class="opt-visual radio"></span><span class="opt-text">Culinary Arts — Hilda Baci</span></label>
+            <label class="option"><input type="radio" name="track" value="fashion_styling"><span class="opt-visual radio"></span><span class="opt-text">Fashion Styling — Swanky Jerry</span></label>
+            <label class="option"><input type="radio" name="track" value="music_business"><span class="opt-visual radio"></span><span class="opt-text">Music Business — Asa Asika</span></label>
+            <label class="option"><input type="radio" name="track" value="dj"><span class="opt-visual radio"></span><span class="opt-text">DJing — DJ Xclusive</span></label>
+            <label class="option"><input type="radio" name="track" value="songwriting"><span class="opt-visual radio"></span><span class="opt-text">Songwriting — Johnny Drille</span></label>
+            <label class="option"><input type="radio" name="track" value="music_production"><span class="opt-visual radio"></span><span class="opt-text">Music Production &amp; Business — Johnny Drille</span></label>
+            <label class="option"><input type="radio" name="track" value="sports_management"><span class="opt-visual radio"></span><span class="opt-text">Sports Management — Lanre Vigo</span></label>
+            <label class="option"><input type="radio" name="track" value="music_career_launch"><span class="opt-visual radio"></span><span class="opt-text">Music Career Launch — Wavy The Creator</span></label>
+          </div>
+        </div>
+
+        <div class="step" data-step="2">
+          <label class="q-label">How would you rate today's session overall? <span class="star">*</span></label>
+          <p class="q-hint">1 = Didn't meet expectations &middot; 5 = Exceeded all expectations</p>
+          <div class="rating-row">
+            <label class="rating-opt"><input type="radio" name="rating" value="1"><span class="emoji">😐</span><span class="num">1</span></label>
+            <label class="rating-opt"><input type="radio" name="rating" value="2"><span class="emoji">🙂</span><span class="num">2</span></label>
+            <label class="rating-opt"><input type="radio" name="rating" value="3"><span class="emoji">😊</span><span class="num">3</span></label>
+            <label class="rating-opt"><input type="radio" name="rating" value="4"><span class="emoji">😄</span><span class="num">4</span></label>
+            <label class="rating-opt"><input type="radio" name="rating" value="5"><span class="emoji">🤩</span><span class="num">5</span></label>
+          </div>
+        </div>
+
+        <div class="step" data-step="3">
+          <label class="q-label">Which Hidden Secret hit hardest for you? <span class="star">*</span></label>
+          <p class="q-hint">Select the one that made you stop and think.</p>
+          <div class="options">
+            <label class="option"><input type="radio" name="hidden_secret" value="secret_1"><span class="opt-visual radio"></span><span class="opt-text">#1 &mdash; 80% of income comes from 20% of clients</span></label>
+            <label class="option"><input type="radio" name="hidden_secret" value="secret_2"><span class="opt-visual radio"></span><span class="opt-text">#2 &mdash; Your first client is almost never a stranger</span></label>
+            <label class="option"><input type="radio" name="hidden_secret" value="secret_3"><span class="opt-visual radio"></span><span class="opt-text">#3 &mdash; Never quote your price first</span></label>
+            <label class="option"><input type="radio" name="hidden_secret" value="secret_4"><span class="opt-visual radio"></span><span class="opt-text">#4 &mdash; Always take 50% deposit. No exceptions.</span></label>
+            <label class="option"><input type="radio" name="hidden_secret" value="secret_5"><span class="opt-visual radio"></span><span class="opt-text">#5 &mdash; Retainers beat one-off gigs every time</span></label>
+            <label class="option"><input type="radio" name="hidden_secret" value="secret_6"><span class="opt-visual radio"></span><span class="opt-text">#6 &mdash; You don't need a big following</span></label>
+            <label class="option"><input type="radio" name="hidden_secret" value="secret_7"><span class="opt-visual radio"></span><span class="opt-text">#7 &mdash; 80% of deals happen after the 5th follow-up</span></label>
+            <label class="option"><input type="radio" name="hidden_secret" value="secret_8"><span class="opt-visual radio"></span><span class="opt-text">#8 &mdash; Testimonials are currency</span></label>
+            <label class="option"><input type="radio" name="hidden_secret" value="secret_9"><span class="opt-visual radio"></span><span class="opt-text">#9 &mdash; The referral ask nobody makes</span></label>
+            <label class="option"><input type="radio" name="hidden_secret" value="secret_10"><span class="opt-visual radio"></span><span class="opt-text">#10 &mdash; Corporates buy solutions, not services</span></label>
+            <label class="option"><input type="radio" name="hidden_secret" value="secret_11"><span class="opt-visual radio"></span><span class="opt-text">#11 &mdash; Always give three pricing options</span></label>
+          </div>
+        </div>
+
+        <div class="step" data-step="4">
+          <label class="q-label" for="next_action">What is the ONE thing you will do differently in the next 7 days? <span class="star">*</span></label>
+          <p class="q-hint">Be as specific as possible. "Follow up with Ade about the catering gig" is better than "follow up more."</p>
+          <div class="field">
+            <textarea id="next_action" name="next_action" maxlength="500" placeholder="In the next 7 days I will..." required></textarea>
+            <div class="char-count"><span id="actionCount">0</span>/500</div>
+          </div>
+        </div>
+
+        <div class="step" data-step="5">
+          <label class="q-label" for="most_useful">What was the most useful thing you learned today? <span class="star">*</span></label>
+          <p class="q-hint">Be specific. What clicked for you?</p>
+          <div class="field">
+            <textarea id="most_useful" name="most_useful" maxlength="500" placeholder="The thing that helped me most was..." required></textarea>
+            <div class="char-count"><span id="usefulCount">0</span>/500</div>
+          </div>
+        </div>
+
+        <div class="step" data-step="6">
+          <label class="q-label">What topic would you want us to cover in a future session? <span class="star">*</span></label>
+          <p class="q-hint">Select all that apply, or tell us your own.</p>
+          <div class="options">
+            <label class="option"><input type="checkbox" name="future_topic" value="proposals"><span class="opt-visual check"></span><span class="opt-text">How to write a winning proposal</span></label>
+            <label class="option"><input type="checkbox" name="future_topic" value="branding"><span class="opt-visual check"></span><span class="opt-text">Building your personal brand on social media</span></label>
+            <label class="option"><input type="checkbox" name="future_topic" value="finance"><span class="opt-visual check"></span><span class="opt-text">Financial management for creatives</span></label>
+            <label class="option"><input type="checkbox" name="future_topic" value="legal"><span class="opt-visual check"></span><span class="opt-text">Legal basics — contracts, rights, and IP</span></label>
+            <label class="option"><input type="checkbox" name="future_topic" value="negotiation"><span class="opt-visual check"></span><span class="opt-text">Negotiation skills for creatives</span></label>
+            <label class="option"><input type="checkbox" name="future_topic" value="team"><span class="opt-visual check"></span><span class="opt-text">Growing a team around your creative business</span></label>
+            <label class="option"><input type="checkbox" name="future_topic" value="other" id="topicOtherCheck"><span class="opt-visual check"></span><span class="opt-text">Other:</span></label>
+          </div>
+          <div class="field optional-field" id="topicOtherField" style="display:none">
+            <input type="text" id="future_topic_other" name="future_topic_other" placeholder="Tell us what else you'd love to learn">
+          </div>
+        </div>
+
+        <div class="step" data-step="7">
+          <label class="q-label">Would you recommend this session to a fellow creative? <span class="star">*</span></label>
+          <div class="options" style="margin-top:12px">
+            <label class="option"><input type="radio" name="recommend" value="yes_share"><span class="opt-visual radio"></span><span class="opt-text">Yes — I already want to share it</span></label>
+            <label class="option"><input type="radio" name="recommend" value="yes_try"><span class="opt-visual radio"></span><span class="opt-text">Yes — after I try what I learned first</span></label>
+            <label class="option"><input type="radio" name="recommend" value="maybe"><span class="opt-visual radio"></span><span class="opt-text">Maybe — depends on what they need</span></label>
+            <label class="option"><input type="radio" name="recommend" value="no"><span class="opt-visual radio"></span><span class="opt-text">No — it wasn't for me</span></label>
+          </div>
+        </div>
+
+        <div class="step" data-step="8">
+          <label class="q-label" for="final_message">Any final message for Temi and the Learnstar team?</label>
+          <p class="q-hint">Optional — but these are the ones we screenshot and save.</p>
+          <div class="field">
+            <textarea id="final_message" name="final_message" maxlength="500" placeholder="Temi, I want you to know..."></textarea>
+            <div class="char-count"><span id="messageCount">0</span>/500</div>
+          </div>
+        </div>
+      </form>
+
+      <div class="step-err" id="stepErr"></div>
+    </div>
+
+    <div class="nav-bar">
+      <button class="btn-back" id="btnBack" style="visibility:hidden">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 4L6 8L10 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Back
+      </button>
+      <button class="btn-next" id="btnNext">
+        Next
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 4L10 8L6 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <div id="submitWrap" style="display:none;">
+        <button class="btn-submit" id="btnSubmit" type="button">
+          <span class="spinner"></span>
+          <span class="btn-text">Submit Feedback</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="global-err" id="globalErr"></div>
+  </div>
+</div>
+
+<script>
+(function() {
+  var OPEN_TIME = new Date("2026-05-19T15:30:00+01:00");
+
+  // Time gate — redirect if too early
+  if (new Date() < OPEN_TIME) {
+    window.location.href = "/?locked=true";
+    return;
+  }
+
+  // Elements
+  var verifySection = document.getElementById('verifySection');
+  var feedbackSection = document.getElementById('feedbackSection');
+  var verifyForm = document.getElementById('verifyForm');
+  var verifyConfirmed = document.getElementById('verifyConfirmed');
+  var verifyBtn = document.getElementById('verifyBtn');
+  var verifyErr = document.getElementById('verifyErr');
+  var confirmedName = document.getElementById('confirmedName');
+  var confirmedTrack = document.getElementById('confirmedTrack');
+  var startBtn = document.getElementById('startFeedbackBtn');
+  var successState = document.getElementById('successState');
+
+  var form = document.getElementById('feedbackForm');
+  var stepErr = document.getElementById('stepErr');
+  var globalErr = document.getElementById('globalErr');
+  var progressFill = document.getElementById('progressFill');
+  var progressText = document.getElementById('progressText');
+  var btnBack = document.getElementById('btnBack');
+  var btnNext = document.getElementById('btnNext');
+  var btnSubmit = document.getElementById('btnSubmit');
+  var submitWrap = document.getElementById('submitWrap');
+
+  var TOTAL = 8;
+  var currentStep = 1;
+  var verifiedData = null;
+
+  // Character counters
+  document.getElementById('next_action').addEventListener('input', function() { document.getElementById('actionCount').textContent = this.value.length; });
+  document.getElementById('most_useful').addEventListener('input', function() { document.getElementById('usefulCount').textContent = this.value.length; });
+  document.getElementById('final_message').addEventListener('input', function() { document.getElementById('messageCount').textContent = this.value.length; });
+
+  // Show "Other" text field when checkbox is checked
+  document.getElementById('topicOtherCheck').addEventListener('change', function() {
+    document.getElementById('topicOtherField').style.display = this.checked ? 'block' : 'none';
+    if (this.checked) document.getElementById('future_topic_other').focus();
+  });
+
+  // Verify
+  verifyBtn.addEventListener('click', function() {
+    var name = document.getElementById('verifyName').value.trim();
+    var state = document.getElementById('verifyState').value.trim();
+    var track = document.getElementById('verifyTrack').value;
+
+    if (!name || !state || !track) {
+      verifyErr.textContent = 'Please fill in all fields to verify.';
+      verifyErr.classList.add('active');
+      return;
+    }
+
+    verifyErr.classList.remove('active');
+    verifyBtn.disabled = true;
+    verifyBtn.classList.add('loading');
+
+    fetch('/api/feedback?action=verify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ first_name: name, state: state, track: track })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(result) {
+      if (result.verified) {
+        verifiedData = { first_name: name, state: state, track: track };
+        confirmedName.textContent = 'Welcome back, ' + name + '!';
+        confirmedTrack.textContent = 'Track: ' + (result.track_label || track);
+        verifyForm.style.display = 'none';
+        verifyConfirmed.classList.add('active');
+      } else {
+        if (result.reason === 'not_found') {
+          verifyErr.textContent = "We couldn't find your pre-check. Make sure you entered the same name, state, and track you used before.";
+        } else {
+          verifyErr.textContent = 'Verification failed. Please try again.';
+        }
+        verifyErr.classList.add('active');
+        verifyBtn.disabled = false;
+        verifyBtn.classList.remove('loading');
+      }
+    })
+    .catch(function(err) {
+      verifyErr.textContent = 'Something went wrong: ' + err.message + '. Please try again.';
+      verifyErr.classList.add('active');
+      verifyBtn.disabled = false;
+      verifyBtn.classList.remove('loading');
+    });
+  });
+
+  // Start feedback
+  startBtn.addEventListener('click', function() {
+    verifySection.classList.remove('active');
+    feedbackSection.classList.add('active');
+    if (verifiedData) {
+      var trackRadio = form.querySelector('input[name="track"][value="' + verifiedData.track + '"]');
+      if (trackRadio) trackRadio.checked = true;
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+
+  // Step validation
+  var stepValidations = {
+    1: function() { return form.querySelector('input[name="track"]:checked') !== null; },
+    2: function() { return form.querySelector('input[name="rating"]:checked') !== null; },
+    3: function() { return form.querySelector('input[name="hidden_secret"]:checked') !== null; },
+    4: function() { return document.getElementById('next_action').value.trim() !== ''; },
+    5: function() { return document.getElementById('most_useful').value.trim() !== ''; },
+    6: function() { return form.querySelectorAll('input[name="future_topic"]:checked').length > 0; },
+    7: function() { return form.querySelector('input[name="recommend"]:checked') !== null; },
+    8: function() { return true; }, // optional
+  };
+
+  var errorMessages = {
+    1: 'Please confirm your track.',
+    2: 'Please rate today\'s session.',
+    3: 'Select the Hidden Secret that hit hardest.',
+    4: 'Tell us one thing you\'ll do differently.',
+    5: 'What was the most useful thing you learned?',
+    6: 'Select at least one topic.',
+    7: 'Would you recommend this session?',
+  };
+
+  function clearStepErr() { stepErr.classList.remove('active'); stepErr.textContent = ''; }
+  function clearGlobalErr() { globalErr.classList.remove('active'); globalErr.textContent = ''; }
+
+  function showStepErr(msg) {
+    stepErr.textContent = msg;
+    stepErr.classList.add('active');
+    stepErr.style.animation = 'none';
+    stepErr.offsetHeight;
+    stepErr.style.animation = 'fadeIn 0.25s ease';
+  }
+
+  function updateUI() {
+    var pct = Math.round((currentStep / TOTAL) * 100);
+    progressFill.style.width = pct + '%';
+    progressText.textContent = 'Question ' + currentStep + ' of ' + TOTAL;
+
+    var dots = document.querySelectorAll('#feedbackSection .step-dot');
+    dots.forEach(function(dot, i) {
+      dot.classList.remove('done', 'current', 'pop');
+      if (i + 1 < currentStep) dot.classList.add('done');
+      if (i + 1 === currentStep) { dot.classList.add('current'); dot.classList.add('pop'); }
+    });
+
+    btnBack.style.visibility = currentStep === 1 ? 'hidden' : 'visible';
+    btnBack.style.opacity = currentStep === 1 ? '0' : '1';
+    btnBack.style.pointerEvents = currentStep === 1 ? 'none' : 'auto';
+
+    if (currentStep === TOTAL) {
+      btnNext.style.display = 'none';
+      submitWrap.style.display = 'block';
+    } else {
+      btnNext.style.display = 'inline-flex';
+      submitWrap.style.display = 'none';
+    }
+
+    clearStepErr();
+
+    if (currentStep === 4) setTimeout(function() { document.getElementById('next_action').focus(); }, 100);
+    if (currentStep === 5) setTimeout(function() { document.getElementById('most_useful').focus(); }, 100);
+  }
+
+  function goToStep(step) {
+    document.querySelector('.step[data-step="' + currentStep + '"]').classList.remove('active');
+    var newEl = document.querySelector('.step[data-step="' + step + '"]');
+    newEl.classList.add('active');
+    newEl.style.animation = 'none';
+    newEl.offsetHeight;
+    newEl.style.animation = 'stepIn 0.4s ease both';
+    currentStep = step;
+    updateUI();
+    document.querySelector('.step-card').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  function handleNext() {
+    clearStepErr(); clearGlobalErr();
+    if (currentStep <= 7 && !stepValidations[currentStep]()) {
+      showStepErr(errorMessages[currentStep]);
+      var errDot = document.querySelector('#feedbackSection .step-dot.current');
+      if (errDot) { errDot.style.boxShadow = '0 0 12px rgba(239,68,68,0.5)'; errDot.style.background = 'var(--error)'; setTimeout(function() { var d = document.querySelector('#feedbackSection .step-dot.current'); if (d) { d.style.boxShadow = '0 0 10px var(--gold-glow)'; d.style.background = 'var(--gold)'; } }, 1000); }
+      return;
+    }
+    if (currentStep < TOTAL) goToStep(currentStep + 1);
+  }
+
+  function handleBack() {
+    clearStepErr(); clearGlobalErr();
+    if (currentStep > 1) goToStep(currentStep - 1);
+  }
+
+  function handleSubmit() {
+    clearStepErr(); clearGlobalErr();
+
+    btnSubmit.disabled = true;
+    btnSubmit.classList.add('loading');
+    submitWrap.style.display = 'block';
+
+    var data = {};
+    if (verifiedData) {
+      data.first_name = verifiedData.first_name;
+      data.state = verifiedData.state;
+      data.track = verifiedData.track;
+    }
+
+    var trackEl = form.querySelector('input[name="track"]:checked');
+    if (trackEl) data.track = trackEl.value;
+
+    var rating = form.querySelector('input[name="rating"]:checked');
+    if (rating) data.rating = rating.value;
+
+    var secret = form.querySelector('input[name="hidden_secret"]:checked');
+    if (secret) data.hidden_secret = secret.value;
+
+    data.next_action = document.getElementById('next_action').value.trim();
+    data.most_useful = document.getElementById('most_useful').value.trim();
+
+    var topics = Array.from(form.querySelectorAll('input[name="future_topic"]:checked')).map(function(c) { return c.value; });
+    if (topics.length > 0) data.future_topic = topics;
+
+    var otherVal = document.getElementById('future_topic_other').value.trim();
+    if (otherVal) data.future_topic_other = otherVal;
+
+    var rec = form.querySelector('input[name="recommend"]:checked');
+    if (rec) data.recommend = rec.value;
+
+    data.final_message = document.getElementById('final_message').value.trim();
+
+    fetch('/api/feedback?action=submit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    })
+    .then(function(res) { return res.json(); })
+    .then(function(result) {
+      if (result.success) {
+        feedbackSection.style.display = 'none';
+        successState.style.display = 'block';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        throw new Error(result.error || 'Submission failed');
+      }
+    })
+    .catch(function(err) {
+      showGlobalErr('Something went wrong: ' + err.message + '. Please try again.');
+      btnSubmit.disabled = false;
+      btnSubmit.classList.remove('loading');
+    });
+  }
+
+  btnNext.addEventListener('click', handleNext);
+  btnBack.addEventListener('click', handleBack);
+  btnSubmit.addEventListener('click', handleSubmit);
+
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      var tag = document.activeElement.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA') {
+        if (currentStep === TOTAL && tag === 'INPUT') { e.preventDefault(); handleSubmit(); }
+        else if (currentStep < TOTAL && tag === 'INPUT') { e.preventDefault(); handleNext(); }
+      }
+    }
+  });
+
+  updateUI();
+})();
+</script>
+
+</body>
+</html>

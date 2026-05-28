@@ -13,16 +13,28 @@ export async function GET(request) {
   }
 
   try {
-    const { blobs } = await list({ prefix: "submissions/", limit: 1000 });
-    const submissions = [];
+    const [subBlobs, fbBlobs] = await Promise.all([
+      list({ prefix: "submissions/", limit: 2000 }),
+      list({ prefix: "feedback/", limit: 2000 }),
+    ]);
 
-    for (const blob of blobs) {
+    const entries = [];
+
+    for (const blob of subBlobs.blobs) {
       const res = await fetch(blob.url);
       const data = await res.json();
-      submissions.push(data);
+      entries.push({ ...data, form_type: "pre-check" });
     }
 
-    return Response.json(submissions, {
+    for (const blob of fbBlobs.blobs) {
+      const res = await fetch(blob.url);
+      const data = await res.json();
+      entries.push({ ...data, form_type: "feedback" });
+    }
+
+    entries.sort((a, b) => new Date(b.submittedAt) - new Date(a.submittedAt));
+
+    return Response.json(entries, {
       headers: { "Cache-Control": "no-store" },
     });
   } catch (error) {

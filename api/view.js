@@ -1,4 +1,4 @@
-import { kv } from "@vercel/kv";
+import { list } from "@vercel/blob";
 
 export const config = { runtime: "edge" };
 
@@ -14,15 +14,23 @@ export async function GET(request) {
     });
   }
 
-  const ids = await kv.lrange("submissions", 0, -1);
-  const submissions = [];
+  try {
+    const { blobs } = await list({ prefix: "submissions/", limit: 1000 });
+    const submissions = [];
 
-  for (const id of ids) {
-    const data = await kv.hgetall(`submission:${id}`);
-    if (data) submissions.push(data);
+    for (const blob of blobs) {
+      const res = await fetch(blob.url);
+      const data = await res.json();
+      submissions.push(data);
+    }
+
+    return Response.json(submissions, {
+      headers: { "Cache-Control": "no-store" },
+    });
+  } catch (error) {
+    return Response.json(
+      { success: false, error: error.message },
+      { status: 500 }
+    );
   }
-
-  return Response.json(submissions, {
-    headers: { "Cache-Control": "no-store" },
-  });
 }

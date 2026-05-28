@@ -1,4 +1,4 @@
-import { kv } from "@vercel/kv";
+import { put } from "@vercel/blob";
 
 export const config = { runtime: "edge" };
 
@@ -34,8 +34,10 @@ export async function POST(request) {
       submission.challenges = submission.challenges.join(", ");
     }
 
-    await kv.hset(`submission:${id}`, submission);
-    await kv.lpush("submissions", id);
+    await put(`submissions/${id}.json`, JSON.stringify(submission), {
+      contentType: "application/json",
+      access: "private",
+    });
 
     return Response.json({ success: true, id });
   } catch (error) {

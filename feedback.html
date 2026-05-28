@@ -212,6 +212,8 @@
   .btn-submit:hover { transform: translateY(-1px); box-shadow: 0 4px 24px rgba(232,160,32,0.4); }
   .btn-submit:active { transform: scale(0.97); }
   .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+  #submitWrap { width:100%; }
+  #submitWrap .btn-submit { width:100%; justify-content:center; }
   .btn-submit .spinner { display: none; width: 16px; height: 16px; border: 2px solid rgba(10,10,24,0.25); border-top-color: #0A0A18; border-radius: 50%; animation: spin 0.6s linear infinite; }
   .btn-submit.loading .spinner { display: inline-block; }
   @keyframes spin { to { transform: rotate(360deg); } }
@@ -270,11 +272,15 @@
   <div class="section active" id="verifySection">
     <div class="card header center">
       <div class="header-tag">Skills for All &middot; Cohort 3.0</div>
-      <h1>Post-Session Feedback</h1>
+      <h1>Session Feedback &mdash; The Business Behind the Brand</h1>
       <p>Two minutes. Tell us honestly. Your feedback shapes what we build next.</p>
       <div class="header-meta">
-        <span class="badge">THE BUSINESS BEHIND THE BRAND</span>
+        <span class="badge">POST-SESSION &middot; FILL NOW BEFORE YOU LEAVE</span>
       </div>
+    </div>
+
+    <div class="card" style="padding:0.75rem 1.5rem;text-align:center;font-size:12px;color:var(--text-muted)">
+      * Required &nbsp;&middot;&nbsp; 8 questions &nbsp;&middot;&nbsp; 2&ndash;3 minutes
     </div>
 
     <div class="card verify-card">
@@ -300,8 +306,7 @@
             <option value="fashion_styling">Fashion Styling — Swanky Jerry</option>
             <option value="music_business">Music Business — Asa Asika</option>
             <option value="dj">DJing — DJ Xclusive</option>
-            <option value="songwriting">Songwriting — Johnny Drille</option>
-            <option value="music_production">Music Production &amp; Business — Johnny Drille</option>
+            <option value="songwriting_production">Songwriting / Production — Johnny Drille</option>
             <option value="sports_management">Sports Management — Lanre Vigo</option>
             <option value="music_career_launch">Music Career Launch — Wavy The Creator</option>
           </select>
@@ -352,8 +357,7 @@
             <label class="option"><input type="radio" name="track" value="fashion_styling"><span class="opt-visual radio"></span><span class="opt-text">Fashion Styling — Swanky Jerry</span></label>
             <label class="option"><input type="radio" name="track" value="music_business"><span class="opt-visual radio"></span><span class="opt-text">Music Business — Asa Asika</span></label>
             <label class="option"><input type="radio" name="track" value="dj"><span class="opt-visual radio"></span><span class="opt-text">DJing — DJ Xclusive</span></label>
-            <label class="option"><input type="radio" name="track" value="songwriting"><span class="opt-visual radio"></span><span class="opt-text">Songwriting — Johnny Drille</span></label>
-            <label class="option"><input type="radio" name="track" value="music_production"><span class="opt-visual radio"></span><span class="opt-text">Music Production &amp; Business — Johnny Drille</span></label>
+            <label class="option"><input type="radio" name="track" value="songwriting_production"><span class="opt-visual radio"></span><span class="opt-text">Songwriting / Production — Johnny Drille</span></label>
             <label class="option"><input type="radio" name="track" value="sports_management"><span class="opt-visual radio"></span><span class="opt-text">Sports Management — Lanre Vigo</span></label>
             <label class="option"><input type="radio" name="track" value="music_career_launch"><span class="opt-visual radio"></span><span class="opt-text">Music Career Launch — Wavy The Creator</span></label>
           </div>
@@ -441,10 +445,13 @@
             <textarea id="final_message" name="final_message" maxlength="500" placeholder="Temi, I want you to know..."></textarea>
             <div class="char-count"><span id="messageCount">0</span>/500</div>
           </div>
+          <div class="step-err" id="stepErr"></div>
         </div>
       </form>
 
-      <div class="step-err" id="stepErr"></div>
+      <div class="card" style="padding:1rem 1.5rem;margin-top:0;background:rgba(26,58,106,0.5);border-color:rgba(255,255,255,0.08)">
+        <p style="font-size:12px;color:#9DB8DD;line-height:1.5;margin:0;text-align:center">Question 8 responses may be shared publicly as testimonials. If you'd prefer yours to remain private, leave it blank.</p>
+      </div>
     </div>
 
     <div class="nav-bar">

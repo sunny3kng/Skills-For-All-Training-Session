@@ -33,7 +33,7 @@ async function handleVerify(request) {
       if (
         data.first_name?.toLowerCase() === first_name.toLowerCase() &&
         data.state?.toLowerCase() === state.toLowerCase() &&
-        data.track === track
+        (data.track === track || (track === "songwriting_production" && (data.track === "songwriting" || data.track === "music_production")))
       ) {
         return Response.json({ verified: true, track_label: trackToLabel(track) });
       }
@@ -86,6 +86,7 @@ const trackLabels = {
   dj: "DJing — DJ Xclusive",
   songwriting: "Songwriting — Johnny Drille",
   music_production: "Music Production & Business — Johnny Drille",
+  songwriting_production: "Songwriting / Production — Johnny Drille",
   sports_management: "Sports Management — Lanre Vigo",
   music_career_launch: "Music Career Launch — Wavy The Creator",
 };

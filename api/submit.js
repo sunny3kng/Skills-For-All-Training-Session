@@ -35,7 +35,7 @@ export async function POST(request) {
 
     await put(`submissions/${id}.json`, JSON.stringify(submission), {
       contentType: "application/json",
-      access: "private",
+      access: "public",
     });
 
     return Response.json({ success: true, id });

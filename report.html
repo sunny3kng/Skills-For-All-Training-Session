@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SFA Report — Skills for All</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #08080E; --glass: rgba(18, 18, 28, 0.65); --glass-light: rgba(18, 18, 28, 0.45);
+    --border: rgba(255, 255, 255, 0.06); --border-light: rgba(255, 255, 255, 0.10);
+    --text: #E8E8F0; --text-muted: #8888A2; --text-dim: #5C5C74;
+    --gold: #E8A020; --gold-subtle: rgba(232, 160, 32, 0.1);
+    --green: #10B981; --green-subtle: rgba(16, 185, 129, 0.1);
+    --red: #EF4444; --blue: #3B82F6; --purple: #8B5CF6;
+    --radius: 16px; --radius-sm: 10px;
+    --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: var(--font); background: var(--bg); color: var(--text);
+    min-height: 100vh; padding: 2rem 1rem; -webkit-font-smoothing: antialiased;
+  }
+  .bg-orb { position: fixed; border-radius: 50%; filter: blur(100px); pointer-events: none; z-index: 0; opacity: 0.15; }
+  .bg-orb--tr { width: 500px; height: 500px; background: radial-gradient(circle, rgba(26,58,106,0.9) 0%, transparent 70%); top: -180px; right: -120px; }
+  .bg-orb--bl { width: 400px; height: 400px; background: radial-gradient(circle, rgba(232,160,32,0.2) 0%, transparent 70%); bottom: -120px; left: -80px; }
+  .container { max-width: 900px; margin: 0 auto; position: relative; z-index: 1; }
+  .card { background: var(--glass); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: 0 8px 32px rgba(0,0,0,0.25); }
+  .card + .card { margin-top: 10px; }
+
+  .header {
+    padding: 1.5rem 1.75rem; text-align: center;
+    background: linear-gradient(135deg, rgba(26,58,106,0.5) 0%, rgba(15,30,60,0.4) 100%);
+    backdrop-filter: blur(24px); border: 1px solid rgba(255,255,255,0.08);
+    position: relative; overflow: hidden;
+  }
+  .header::after { content: ''; position: absolute; top: -30%; left: 50%; transform: translateX(-50%); width: 300px; height: 300px; background: radial-gradient(circle, rgba(232,160,32,0.06) 0%, transparent 70%); border-radius: 50%; pointer-events: none; }
+  .header-tag { font-size: 10.5px; font-weight: 600; color: #7BA0D0; letter-spacing: 3.5px; text-transform: uppercase; margin-bottom: 6px; position: relative; z-index: 1; }
+  .header h1 { font-size: 22px; font-weight: 600; color: #fff; margin-bottom: 4px; position: relative; z-index: 1; }
+  .header .sub { font-size: 13px; color: #9DB8DD; position: relative; z-index: 1; }
+
+  /* Token input */
+  .token-prompt { padding: 2rem; text-align: center; }
+  .token-prompt h2 { font-size: 18px; margin-bottom: 12px; }
+  .token-prompt .field { max-width: 360px; margin: 0 auto 14px; }
+  .token-prompt input { width: 100%; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 14px; font-size: 14px; font-family: var(--font); color: var(--text); background: rgba(0,0,0,0.3); outline: none; text-align: center; }
+  .token-prompt input:focus { border-color: rgba(232,160,32,0.45); box-shadow: 0 0 0 3px var(--gold-subtle); }
+  .token-btn {
+    background: var(--gold); color: #0A0A18; border: none; padding: 10px 28px; border-radius: 50px;
+    font-size: 14px; font-weight: 600; font-family: var(--font); cursor: pointer; transition: all 0.22s ease;
+  }
+  .token-btn:hover { background: #F0B030; transform: translateY(-1px); box-shadow: 0 4px 20px rgba(232,160,32,0.3); }
+
+  /* Toolbar */
+  .toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 0.75rem 1.5rem; }
+  .toolbar .count { font-size: 13px; color: var(--text-muted); }
+  .toolbar .count strong { color: var(--text); }
+  .export-btn {
+    background: var(--glass-light); border: 1px solid var(--border); color: var(--text);
+    padding: 8px 18px; border-radius: 50px; font-size: 13px; font-weight: 500;
+    font-family: var(--font); cursor: pointer; transition: all 0.22s ease; display: inline-flex; align-items: center; gap: 6px;
+  }
+  .export-btn:hover { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.15); }
+
+  /* Stats row */
+  .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; padding: 0; }
+  .stat-card { padding: 1.25rem; text-align: center; }
+  .stat-card .num { font-size: 28px; font-weight: 700; color: #fff; line-height: 1; }
+  .stat-card .label { font-size: 11.5px; color: var(--text-muted); margin-top: 6px; text-transform: uppercase; letter-spacing: 1px; }
+  .stat-card .num.gold { color: var(--gold); }
+  .stat-card .num.green { color: var(--green); }
+  .stat-card .num.blue { color: var(--blue); }
+  .stat-card .num.purple { color: var(--purple); }
+
+  /* Section */
+  .section-title { font-size: 15px; font-weight: 600; color: #fff; padding: 1.25rem 1.5rem 0; margin-bottom: -4px; }
+  .section-body { padding: 1rem 1.5rem 1.25rem; }
+
+  /* Bar chart */
+  .chart { display: flex; flex-direction: column; gap: 8px; }
+  .chart-row { display: flex; align-items: center; gap: 12px; }
+  .chart-label { font-size: 13px; color: var(--text); min-width: 140px; }
+  .chart-bar-wrap { flex: 1; height: 28px; background: rgba(255,255,255,0.03); border-radius: 14px; overflow: hidden; position: relative; }
+  .chart-bar { height: 100%; border-radius: 14px; transition: width 0.6s ease; display: flex; align-items: center; padding-left: 10px; min-width: 0; }
+  .chart-bar .inner-label { font-size: 11px; font-weight: 600; color: rgba(0,0,0,0.7); white-space: nowrap; }
+  .chart-value { font-size: 13px; font-weight: 600; color: var(--text-muted); min-width: 30px; text-align: right; }
+
+  .bar-gold { background: linear-gradient(90deg, #E8A020, #F0B030); }
+  .bar-green { background: linear-gradient(90deg, #059669, #10B981); }
+  .bar-blue { background: linear-gradient(90deg, #2563EB, #3B82F6); }
+  .bar-purple { background: linear-gradient(90deg, #7C3AED, #8B5CF6); }
+  .bar-red { background: linear-gradient(90deg, #DC2626, #EF4444); }
+  .bar-cyan { background: linear-gradient(90deg, #0891B2, #06B6D4); }
+  .bar-pink { background: linear-gradient(90deg, #DB2777, #EC4899); }
+  .bar-orange { background: linear-gradient(90deg, #D97706, #F59E0B); }
+
+  /* table */
+  .table-wrap { overflow-x: auto; padding: 0.5rem 0; }
+  table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  th { text-align: left; padding: 8px 10px; color: var(--text-muted); font-weight: 500; border-bottom: 1px solid var(--border); white-space: nowrap; }
+  td { padding: 8px 10px; border-bottom: 1px solid rgba(255,255,255,0.03); color: var(--text); vertical-align: top; }
+  tr:hover td { background: rgba(255,255,255,0.02); }
+  .resp-text { max-width: 200px; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+  .track-tag { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 500; background: var(--gold-subtle); color: var(--gold); }
+  .type-tag { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 500; }
+  .type-tag.pre { background: var(--gold-subtle); color: var(--gold); }
+  .type-tag.fb { background: var(--green-subtle); color: var(--green); }
+
+  /* Loading / Error */
+  .loading-state, .error-state { padding: 3rem; text-align: center; }
+  .loading-state .spinner { width: 32px; height: 32px; border: 3px solid rgba(255,255,255,0.08); border-top-color: var(--gold); border-radius: 50%; animation: spin 0.7s linear infinite; margin: 0 auto 16px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .error-state { color: #FCA5A5; }
+  .hidden { display: none !important; }
+
+  @media (max-width: 640px) {
+    body { padding: 1rem 0.75rem; }
+    .chart-label { min-width: 100px; font-size: 12px; }
+    .stats-row { grid-template-columns: repeat(2, 1fr); }
+    th, td { font-size: 11px; padding: 6px 6px; }
+    .resp-text { max-width: 120px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="bg-orb bg-orb--tr"></div>
+<div class="bg-orb bg-orb--bl"></div>
+
+<div class="container" id="app">
+
+  <div class="card header">
+    <div class="header-tag">Skills for All &middot; Cohort 3.0</div>
+    <h1>Pre-Session Report</h1>
+    <div class="sub" id="headerSub">Loading...</div>
+  </div>
+
+  <!-- Token prompt -->
+  <div class="card" id="tokenPrompt">
+    <div class="token-prompt">
+      <h2>Enter Admin Token</h2>
+      <div class="field">
+        <input type="text" id="tokenInput" placeholder="Paste your admin token">
+      </div>
+      <button class="token-btn" id="tokenBtn">View Report</button>
+      <div style="margin-top:12px;font-size:12px;color:var(--text-muted)">Or add <code>?token=YOUR_TOKEN</code> to the URL</div>
+    </div>
+  </div>
+
+  <!-- Report -->
+  <div id="reportWrap" class="hidden">
+
+    <div class="card toolbar">
+      <span class="count" id="countDisplay">Loading...</span>
+      <button class="export-btn" id="exportBtn">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 3V10M8 10L5.5 7.5M8 10L10.5 7.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 11V12.5C2 13.3284 2.67157 14 3.5 14H12.5C13.3284 14 14 13.3284 14 12.5V11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        Export PNG
+      </button>
+    </div>
+
+    <div id="reportContent">
+
+      <!-- Stats row -->
+      <div class="stats-row" id="statsRow"></div>
+
+      <!-- Track distribution -->
+      <div class="card">
+        <div class="section-title">Track Distribution</div>
+        <div class="section-body"><div class="chart" id="trackChart"></div></div>
+      </div>
+
+      <!-- Challenges distribution -->
+      <div class="card">
+        <div class="section-title">Biggest Challenges</div>
+        <div class="section-body"><div class="chart" id="challengeChart"></div></div>
+      </div>
+
+      <!-- Money status -->
+      <div class="card">
+        <div class="section-title">Income Status</div>
+        <div class="section-body"><div class="chart" id="moneyChart"></div></div>
+      </div>
+
+      <!-- Respondents -->
+      <div class="card">
+        <div class="section-title">Individual Responses</div>
+        <div class="section-body">
+          <div class="table-wrap">
+            <table id="responsesTable">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Name</th>
+                  <th>State</th>
+                  <th>Track</th>
+                  <th>Challenges</th>
+                  <th>Income</th>
+                  <th>Success Vision</th>
+                  <th>Question</th>
+                  <th>Submitted</th>
+                </tr>
+              </thead>
+              <tbody id="tableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Error -->
+  <div class="card hidden" id="errorDisplay">
+    <div class="error-state" id="errorMsg"></div>
+  </div>
+</div>
+
+<script>
+(function() {
+  var tokenPrompt = document.getElementById('tokenPrompt');
+  var reportWrap = document.getElementById('reportWrap');
+  var errorDisplay = document.getElementById('errorDisplay');
+  var errorMsg = document.getElementById('errorMsg');
+
+  var trackLabels = {
+    culinary_arts: 'Culinary Arts', fashion_styling: 'Fashion Styling',
+    music_business: 'Music Business', dj: 'DJing',
+    songwriting: 'Songwriting', music_production: 'Music Production',
+    sports_management: 'Sports Management', music_career_launch: 'Music Career Launch',
+  };
+
+  var challengeLabels = {
+    pricing: 'Pricing', finding_clients: 'Finding Clients',
+    online_presence: 'Online Presence', corporate_clients: 'Corporate Clients',
+    consistency: 'Consistency', technology: 'Technology',
+  };
+
+  var moneyLabels = {
+    regular_income: 'Regular Income', occasional_gigs: 'Occasional Gigs',
+    very_close: 'Very Close', not_yet: 'Not Yet',
+  };
+
+  var barColors = ['bar-gold', 'bar-green', 'bar-blue', 'bar-purple', 'bar-red', 'bar-cyan', 'bar-pink', 'bar-orange'];
+
+  function getToken() {
+    var params = new URLSearchParams(window.location.search);
+    var t = params.get('token');
+    if (t) document.getElementById('tokenInput').value = t;
+    return t;
+  }
+
+  function init() {
+    var token = getToken();
+    if (token) { loadData(token); return; }
+
+    document.getElementById('tokenBtn').addEventListener('click', function() {
+      var t = document.getElementById('tokenInput').value.trim();
+      if (t) loadData(t);
+    });
+  }
+
+  function loadData(token) {
+    tokenPrompt.classList.add('hidden');
+    reportWrap.classList.remove('hidden');
+    document.getElementById('countDisplay').textContent = 'Loading submissions...';
+
+    fetch('/api/view?token=' + encodeURIComponent(token))
+      .then(function(res) {
+        if (!res.ok) throw new Error(res.status === 401 ? 'Unauthorized — check your token' : 'Failed to load data');
+        return res.json();
+      })
+      .then(function(data) {
+        var submissions = data.filter(function(d) { return d.form_type === 'pre-check'; });
+        if (submissions.length === 0) { document.getElementById('countDisplay').textContent = 'No pre-check submissions found.'; return; }
+        render(submissions);
+      })
+      .catch(function(err) {
+        reportWrap.classList.add('hidden');
+        errorDisplay.classList.remove('hidden');
+        errorMsg.textContent = err.message || 'Something went wrong.';
+      });
+  }
+
+  function render(submissions) {
+    var count = submissions.length;
+    document.getElementById('headerSub').textContent = count + ' submission' + (count > 1 ? 's' : '') + ' · ' + new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+
+    var trackCounts = {}; var challengeCounts = {}; var moneyCounts = {}; var stateCounts = {};
+
+    submissions.forEach(function(s) {
+      trackCounts[s.track] = (trackCounts[s.track] || 0) + 1;
+      if (s.challenges) {
+        var parts = s.challenges.split(',').map(function(p) { return p.trim(); });
+        parts.forEach(function(c) { if (c) challengeCounts[c] = (challengeCounts[c] || 0) + 1; });
+      }
+      moneyCounts[s.money_status] = (moneyCounts[s.money_status] || 0) + 1;
+      if (s.state) { var st = s.state.toLowerCase().replace(/ state$/, '').trim(); stateCounts[st] = (stateCounts[st] || 0) + 1; }
+    });
+
+    var topState = Object.keys(stateCounts).sort(function(a,b) { return stateCounts[b] - stateCounts[a]; })[0] || 'N/A';
+    var tracksCount = Object.keys(trackCounts).length;
+    var moneyStatuses = Object.keys(moneyCounts).length;
+
+    // Stats row
+    document.getElementById('statsRow').innerHTML =
+      '<div class="card stat-card"><div class="num gold">' + count + '</div><div class="label">Total Responses</div></div>' +
+      '<div class="card stat-card"><div class="num blue">' + tracksCount + '</div><div class="label">Tracks</div></div>' +
+      '<div class="card stat-card"><div class="num green">' + topState.charAt(0).toUpperCase() + topState.slice(1) + '</div><div class="label">Top State</div></div>' +
+      '<div class="card stat-card"><div class="num green">' + moneyStatuses + '</div><div class="label">Income Levels</div></div>';
+
+    document.getElementById('countDisplay').innerHTML = '<strong>' + count + '</strong> pre-check submission' + (count > 1 ? 's' : '');
+
+    // Bar chart helper
+    function renderChart(containerId, data, labels) {
+      var entries = Object.keys(data).map(function(k) { return { key: k, val: data[k] }; });
+      entries.sort(function(a, b) { return b.val - a.val; });
+      var max = entries.length > 0 ? entries[0].val : 1;
+      var html = '';
+      entries.forEach(function(e, i) {
+        var pct = Math.max(12, Math.round((e.val / max) * 100));
+        var label = labels[e.key] || e.key;
+        html += '<div class="chart-row">' +
+          '<span class="chart-label">' + label + '</span>' +
+          '<div class="chart-bar-wrap"><div class="chart-bar ' + barColors[i % barColors.length] + '" style="width:' + pct + '%"><span class="inner-label">' + e.val + '</span></div></div>' +
+          '<span class="chart-value">' + e.val + '</span>' +
+        '</div>';
+      });
+      document.getElementById(containerId).innerHTML = html;
+    }
+
+    renderChart('trackChart', trackCounts, trackLabels);
+    renderChart('challengeChart', challengeCounts, challengeLabels);
+    renderChart('moneyChart', moneyCounts, moneyLabels);
+
+    // Table
+    var tbody = document.getElementById('tableBody');
+    tbody.innerHTML = submissions.map(function(s, i) {
+      var challenges = s.challenges ? s.challenges.split(',').map(function(c) { return challengeLabels[c.trim()] || c.trim(); }).join(', ') : '-';
+      var date = new Date(s.submittedAt);
+      var dateStr = date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+      var track = trackLabels[s.track] || s.track;
+      return '<tr>' +
+        '<td>' + (i + 1) + '</td>' +
+        '<td><strong>' + s.first_name + '</strong></td>' +
+        '<td>' + s.state + '</td>' +
+        '<td><span class="track-tag">' + track + '</span></td>' +
+        '<td style="font-size:11px;color:var(--text-muted)">' + challenges + '</td>' +
+        '<td style="font-size:11px">' + (moneyLabels[s.money_status] || s.money_status) + '</td>' +
+        '<td><div class="resp-text">' + (s.success_vision || '-') + '</div></td>' +
+        '<td><div class="resp-text">' + (s.question || '-') + '</div></td>' +
+        '<td style="font-size:11px;color:var(--text-dim);white-space:nowrap">' + dateStr + '</td>' +
+      '</tr>';
+    }).join('');
+  }
+
+  // Export
+  document.getElementById('exportBtn').addEventListener('click', function() {
+    var btn = this;
+    btn.textContent = 'Capturing...';
+    btn.disabled = true;
+    html2canvas(document.getElementById('reportContent'), {
+      backgroundColor: '#08080E',
+      scale: 2,
+      useCORS: true,
+    }).then(function(canvas) {
+      var link = document.createElement('a');
+      link.download = 'sfa-pre-session-report.png';
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+      btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 3V10M8 10L5.5 7.5M8 10L10.5 7.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 11V12.5C2 13.3284 2.67157 14 3.5 14H12.5C13.3284 14 14 13.3284 14 12.5V11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg> Export PNG';
+      btn.disabled = false;
+    });
+  });
+
+  init();
+})();
+</script>
+
+</body>
+</html>
